@@ -68,20 +68,25 @@ app.post('/create-payment', async (req, res) => {
       });
     }
 
+    // Generate unique idempotency key for this payment
+    const idempotencyKey = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
     // Create payment using Square
     const response = await squareClient.paymentsApi.createPayment({
       sourceId: sourceId,
+      idempotencyKey: idempotencyKey,
       amountMoney: {
         amount: amountInCents,
         currency: 'USD'
       },
       autocomplete: true,
       note: `Payment for ${customerName} (${customerEmail})`,
-      customerId: customerEmail, // Using email as customer ID for simplicity
+      // Removed customerId as it requires valid customer ID from Customers API
     });
 
     console.log('Payment successful:', {
       paymentId: response.result.payment.id,
+      idempotencyKey: idempotencyKey,
       amount: amount,
       customer: customerName
     });
